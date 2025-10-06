@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      container_entries: {
+        Row: {
+          commodity: string
+          container_number: string
+          created_at: string
+          id: string
+          ispm_photo_url: string
+          latitude: number | null
+          longitude: number | null
+          user_id: string
+        }
+        Insert: {
+          commodity: string
+          container_number: string
+          created_at?: string
+          id?: string
+          ispm_photo_url: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id: string
+        }
+        Update: {
+          commodity?: string
+          container_number?: string
+          created_at?: string
+          id?: string
+          ispm_photo_url?: string
+          latitude?: number | null
+          longitude?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
