@@ -16,33 +16,36 @@ export type Database = {
     Tables: {
       container_entries: {
         Row: {
-          commodity: string
-          container_number: string
+          commodity_photo_url: string | null
+          container_photo_url: string | null
           created_at: string
           id: string
           ispm_photo_url: string
           latitude: number | null
           longitude: number | null
+          shipper: string | null
           user_id: string
         }
         Insert: {
-          commodity: string
-          container_number: string
+          commodity_photo_url?: string | null
+          container_photo_url?: string | null
           created_at?: string
           id?: string
           ispm_photo_url: string
           latitude?: number | null
           longitude?: number | null
+          shipper?: string | null
           user_id: string
         }
         Update: {
-          commodity?: string
-          container_number?: string
+          commodity_photo_url?: string | null
+          container_photo_url?: string | null
           created_at?: string
           id?: string
           ispm_photo_url?: string
           latitude?: number | null
           longitude?: number | null
+          shipper?: string | null
           user_id?: string
         }
         Relationships: []

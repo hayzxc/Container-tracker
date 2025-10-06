@@ -4,13 +4,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, MapPin, Clock } from "lucide-react";
+import { Package, MapPin, Clock, Image } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ContainerEntry {
   id: string;
-  container_number: string;
-  commodity: string;
+  shipper: string;
+  container_photo_url: string;
+  commodity_photo_url: string;
   ispm_photo_url: string;
   latitude: number | null;
   longitude: number | null;
@@ -75,6 +77,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">No</TableHead>
+                  <TableHead>Shipper</TableHead>
                   <TableHead>No. Container</TableHead>
                   <TableHead>Komoditi</TableHead>
                   <TableHead>ISPM</TableHead>
@@ -86,18 +89,67 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                   <TableRow key={entry.id}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{entry.container_number}</Badge>
+                      <Badge variant="outline">{entry.shipper}</Badge>
                     </TableCell>
-                    <TableCell>{entry.commodity}</TableCell>
                     <TableCell>
-                      <a
-                        href={entry.ispm_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        Lihat Foto
-                      </a>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center gap-1 text-primary hover:underline">
+                            <Image className="h-4 w-4" />
+                            Lihat Foto
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Foto No. Container</DialogTitle>
+                          </DialogHeader>
+                          <img
+                            src={entry.container_photo_url}
+                            alt="Container"
+                            className="w-full h-auto rounded-lg"
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center gap-1 text-primary hover:underline">
+                            <Image className="h-4 w-4" />
+                            Lihat Foto
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Foto Komoditi</DialogTitle>
+                          </DialogHeader>
+                          <img
+                            src={entry.commodity_photo_url}
+                            alt="Commodity"
+                            className="w-full h-auto rounded-lg"
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center gap-1 text-primary hover:underline">
+                            <Image className="h-4 w-4" />
+                            Lihat Foto
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Foto ISPM</DialogTitle>
+                          </DialogHeader>
+                          <img
+                            src={entry.ispm_photo_url}
+                            alt="ISPM"
+                            className="w-full h-auto rounded-lg"
+                          />
+                        </DialogContent>
+                      </Dialog>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1 text-sm">
