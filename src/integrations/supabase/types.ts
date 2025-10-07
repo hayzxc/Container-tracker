@@ -14,7 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      container_entries: {
+      containers: {
         Row: {
           commodity_photo_url: string | null
           container_photo_url: string | null
@@ -23,7 +23,7 @@ export type Database = {
           ispm_photo_url: string
           latitude: number | null
           longitude: number | null
-          shipper: string | null
+          shipper_id: string
           user_id: string
         }
         Insert: {
@@ -34,7 +34,7 @@ export type Database = {
           ispm_photo_url: string
           latitude?: number | null
           longitude?: number | null
-          shipper?: string | null
+          shipper_id: string
           user_id: string
         }
         Update: {
@@ -45,7 +45,36 @@ export type Database = {
           ispm_photo_url?: string
           latitude?: number | null
           longitude?: number | null
-          shipper?: string | null
+          shipper_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "containers_shipper_id_fkey"
+            columns: ["shipper_id"]
+            isOneToOne: false
+            referencedRelation: "shippers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shippers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           user_id?: string
         }
         Relationships: []
