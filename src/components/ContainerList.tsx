@@ -31,6 +31,7 @@ interface ContainerListProps {
 }
 
 export const ContainerList = ({ refresh }: ContainerListProps) => {
+  // State management for shippers and containers
   const [shippers, setShippers] = useState<ShipperWithContainers[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedShippers, setExpandedShippers] = useState<Set<string>>(new Set());
