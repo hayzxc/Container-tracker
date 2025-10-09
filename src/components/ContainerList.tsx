@@ -4,10 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, MapPin, Clock, Image, ChevronDown, ChevronRight } from "lucide-react";
+import { Package, MapPin, Clock, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 interface Container {
   id: string;
@@ -17,6 +18,9 @@ interface Container {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  verified: boolean | null;
+  verified_at: string | null;
+  verified_by: string | null;
 }
 
 interface ShipperWithContainers {
@@ -35,6 +39,21 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
   const [shippers, setShippers] = useState<ShipperWithContainers[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedShippers, setExpandedShippers] = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkAdminRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!data);
+  };
 
   const fetchEntries = async () => {
     try {
@@ -70,6 +89,68 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     }
   };
 
+  const deleteContainer = async (containerId: string) => {
+    if (!confirm("Yakin ingin menghapus container ini?")) return;
+
+    const { error } = await supabase
+      .from("containers")
+      .delete()
+      .eq("id", containerId);
+
+    if (error) {
+      console.error("Error deleting container:", error);
+    } else {
+      fetchEntries();
+    }
+  };
+
+  const deleteShipper = async (shipperId: string) => {
+    if (!confirm("Yakin ingin menghapus shipper dan semua containernya?")) return;
+
+    // First delete all containers for this shipper
+    const { error: containerError } = await supabase
+      .from("containers")
+      .delete()
+      .eq("shipper_id", shipperId);
+
+    if (containerError) {
+      console.error("Error deleting containers:", containerError);
+      return;
+    }
+
+    // Then delete the shipper
+    const { error: shipperError } = await supabase
+      .from("shippers")
+      .delete()
+      .eq("id", shipperId);
+
+    if (shipperError) {
+      console.error("Error deleting shipper:", shipperError);
+    } else {
+      fetchEntries();
+    }
+  };
+
+  const verifyContainer = async (containerId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("containers")
+      .update({
+        verified: true,
+        verified_at: new Date().toISOString(),
+        verified_by: user.id,
+      })
+      .eq("id", containerId);
+
+    if (error) {
+      console.error("Error verifying container:", error);
+    } else {
+      fetchEntries();
+    }
+  };
+
   const toggleShipper = (shipperId: string) => {
     const newExpanded = new Set(expandedShippers);
     if (newExpanded.has(shipperId)) {
@@ -81,6 +162,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
   };
 
   useEffect(() => {
+    checkAdminRole();
     fetchEntries();
   }, [refresh]);
 
@@ -134,8 +216,23 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                           {shipper.containers.length} container
                         </span>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {format(new Date(shipper.created_at), "dd MMM yyyy", { locale: id })}
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm text-muted-foreground">
+                          {format(new Date(shipper.created_at), "dd MMM yyyy", { locale: id })}
+                        </div>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteShipper(shipper.id);
+                            }}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CollapsibleTrigger>
@@ -146,7 +243,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                           <p>Belum ada container untuk shipper ini</p>
                         </div>
                       ) : (
-                        <Table>
+                          <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead className="w-12">No</TableHead>
@@ -154,6 +251,8 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                               <TableHead>Komoditi</TableHead>
                               <TableHead>ISPM</TableHead>
                               <TableHead>Time/Loc</TableHead>
+                              <TableHead>Status</TableHead>
+                              {isAdmin && <TableHead className="w-24">Aksi</TableHead>}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -234,6 +333,42 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                     )}
                                   </div>
                                 </TableCell>
+                                <TableCell>
+                                  {container.verified ? (
+                                    <Badge variant="default" className="gap-1">
+                                      <CheckCircle className="h-3 w-3" />
+                                      Terverifikasi
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <XCircle className="h-3 w-3" />
+                                      Belum Diverifikasi
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                {isAdmin && (
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      {!container.verified && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => verifyContainer(container.id)}
+                                        >
+                                          <CheckCircle className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => deleteContainer(container.id)}
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))}
                           </TableBody>
