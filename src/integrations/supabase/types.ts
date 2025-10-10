@@ -19,6 +19,7 @@ export type Database = {
           commodity_photo_url: string | null
           container_photo_url: string | null
           created_at: string
+          custom_timestamp: string | null
           id: string
           ispm_photo_url: string
           latitude: number | null
@@ -33,6 +34,7 @@ export type Database = {
           commodity_photo_url?: string | null
           container_photo_url?: string | null
           created_at?: string
+          custom_timestamp?: string | null
           id?: string
           ispm_photo_url: string
           latitude?: number | null
@@ -47,6 +49,7 @@ export type Database = {
           commodity_photo_url?: string | null
           container_photo_url?: string | null
           created_at?: string
+          custom_timestamp?: string | null
           id?: string
           ispm_photo_url?: string
           latitude?: number | null

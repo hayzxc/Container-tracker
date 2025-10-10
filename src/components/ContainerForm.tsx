@@ -20,6 +20,7 @@ interface Container {
   commodityPhoto: string | null;
   ispmPhoto: string | null;
   location: { lat: number; lng: number } | null;
+  customTimestamp: string | null;
 }
 
 export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
@@ -59,7 +60,8 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
         location: {
           lat: position.coords.latitude,
           lng: position.coords.longitude
-        }
+        },
+        customTimestamp: new Date().toISOString().slice(0, 16)
       };
       setContainers([...containers, newContainer]);
       toast.success("Container baru ditambahkan");
@@ -177,6 +179,7 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
           ispm_photo_url: ispmPhotoUrl,
           latitude: container.location?.lat || null,
           longitude: container.location?.lng || null,
+          custom_timestamp: container.customTimestamp ? new Date(container.customTimestamp).toISOString() : null,
         });
 
         if (error) throw error;
@@ -320,6 +323,20 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
                       <span>Lokasi: {container.location.lat.toFixed(4)}, {container.location.lng.toFixed(4)}</span>
                     </div>
                   )}
+
+                  <div className="space-y-2">
+                    <Label>Timestamp Custom (Opsional)</Label>
+                    <Input
+                      type="datetime-local"
+                      value={container.customTimestamp || ""}
+                      onChange={(e) => {
+                        const updatedContainers = [...containers];
+                        updatedContainers[index].customTimestamp = e.target.value;
+                        setContainers(updatedContainers);
+                      }}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </Card>
             ))}

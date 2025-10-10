@@ -4,13 +4,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { LocationMap } from "@/components/LocationMap";
 import { LiveTimestamp } from "@/components/LiveTimestamp";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface Container {
   id: string;
@@ -20,6 +23,7 @@ interface Container {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
+  custom_timestamp: string | null;
   verified: boolean | null;
   verified_at: string | null;
   verified_by: string | null;
@@ -182,6 +186,23 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     if (error) {
       console.error("Error verifying container:", error);
     } else {
+      fetchEntries();
+    }
+  };
+
+  const updateTimestamp = async (containerId: string, newTimestamp: string) => {
+    const { error } = await supabase
+      .from("containers")
+      .update({
+        custom_timestamp: newTimestamp ? new Date(newTimestamp).toISOString() : null,
+      })
+      .eq("id", containerId);
+
+    if (error) {
+      console.error("Error updating timestamp:", error);
+      toast.error("Gagal mengupdate timestamp");
+    } else {
+      toast.success("Timestamp berhasil diupdate");
       fetchEntries();
     }
   };
@@ -354,28 +375,59 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                     </DialogContent>
                                   </Dialog>
                                 </TableCell>
-                                <TableCell>
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <button className="text-left hover:opacity-80 transition-opacity">
-                                        <LiveTimestamp createdAt={container.created_at} />
-                                      </button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-2xl">
-                                      <DialogHeader>
-                                        <DialogTitle>Detail Lokasi & Waktu</DialogTitle>
-                                      </DialogHeader>
-                                      <div className="space-y-4">
-                                        <LiveTimestamp createdAt={container.created_at} />
-                                        {container.latitude && container.longitude && (
-                                          <LocationMap
-                                            latitude={container.latitude}
-                                            longitude={container.longitude}
-                                            createdAt={container.created_at}
-                                          />
-                                        )}
-                                      </div>
-                                    </DialogContent>
+                                 <TableCell>
+                                   <Dialog>
+                                     <DialogTrigger asChild>
+                                       <button className="text-left hover:opacity-80 transition-opacity">
+                                         <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
+                                       </button>
+                                     </DialogTrigger>
+                                     <DialogContent className="max-w-2xl">
+                                       <DialogHeader>
+                                         <DialogTitle>Detail Lokasi & Waktu</DialogTitle>
+                                       </DialogHeader>
+                                       <div className="space-y-4">
+                                         <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
+                                         
+                                         <div className="space-y-2 p-4 bg-muted rounded-lg">
+                                           <Label className="flex items-center gap-2">
+                                             <Edit className="h-4 w-4" />
+                                             Edit Timestamp Custom
+                                           </Label>
+                                           <div className="flex gap-2">
+                                             <Input
+                                               type="datetime-local"
+                                               defaultValue={
+                                                 container.custom_timestamp 
+                                                   ? new Date(container.custom_timestamp).toISOString().slice(0, 16)
+                                                   : new Date(container.created_at).toISOString().slice(0, 16)
+                                               }
+                                               onChange={(e) => {
+                                                 if (e.target.value) {
+                                                   updateTimestamp(container.id, e.target.value);
+                                                 }
+                                               }}
+                                             />
+                                             {container.custom_timestamp && (
+                                               <Button
+                                                 variant="outline"
+                                                 onClick={() => updateTimestamp(container.id, "")}
+                                               >
+                                                 Reset
+                                               </Button>
+                                             )}
+                                           </div>
+                                         </div>
+
+                                         {container.latitude && container.longitude && (
+                                           <LocationMap
+                                             latitude={container.latitude}
+                                             longitude={container.longitude}
+                                             createdAt={container.created_at}
+                                           />
+                                         )}
+                                       </div>
+                                     </DialogContent>
                                   </Dialog>
                                 </TableCell>
                                 <TableCell>

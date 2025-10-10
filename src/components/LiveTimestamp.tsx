@@ -5,10 +5,12 @@ import { id } from 'date-fns/locale';
 
 interface LiveTimestampProps {
   createdAt: string;
+  customTimestamp?: string | null;
 }
 
-export const LiveTimestamp = ({ createdAt }: LiveTimestampProps) => {
+export const LiveTimestamp = ({ createdAt, customTimestamp }: LiveTimestampProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const displayDate = new Date(customTimestamp || createdAt);
   const createdDate = new Date(createdAt);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export const LiveTimestamp = ({ createdAt }: LiveTimestampProps) => {
   }, []);
 
   const getTimeDifference = () => {
-    const diff = currentTime.getTime() - createdDate.getTime();
+    const diff = currentTime.getTime() - displayDate.getTime();
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
@@ -39,7 +41,11 @@ export const LiveTimestamp = ({ createdAt }: LiveTimestampProps) => {
         {format(currentTime, "HH:mm:ss", { locale: id })}
       </div>
       <div className="text-xs text-muted-foreground">
-        Dibuat: {format(createdDate, "dd MMM yyyy HH:mm", { locale: id })}
+        {customTimestamp ? (
+          <>Custom: {format(displayDate, "dd MMM yyyy HH:mm", { locale: id })}</>
+        ) : (
+          <>Dibuat: {format(createdDate, "dd MMM yyyy HH:mm", { locale: id })}</>
+        )}
       </div>
       <div className="text-xs text-primary font-medium">
         {getTimeDifference()}
