@@ -21,6 +21,9 @@ interface Container {
   verified: boolean | null;
   verified_at: string | null;
   verified_by: string | null;
+  container_photo_signed_url?: string;
+  commodity_photo_signed_url?: string;
+  ispm_photo_signed_url?: string;
 }
 
 interface ShipperWithContainers {
@@ -74,9 +77,39 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
 
           if (containersError) throw containersError;
 
+          // Get signed URLs for all photos
+          const containersWithSignedUrls = await Promise.all(
+            (containers || []).map(async (container) => {
+              const getSignedUrl = async (url: string | null) => {
+                if (!url) return null;
+                const path = url.split('/ispm-photos/')[1];
+                if (!path) return url;
+                
+                const { data } = await supabase.storage
+                  .from('ispm-photos')
+                  .createSignedUrl(path, 3600); // 1 hour expiry
+                
+                return data?.signedUrl || url;
+              };
+
+              const [containerSignedUrl, commoditySignedUrl, ispmSignedUrl] = await Promise.all([
+                getSignedUrl(container.container_photo_url),
+                getSignedUrl(container.commodity_photo_url),
+                getSignedUrl(container.ispm_photo_url),
+              ]);
+
+              return {
+                ...container,
+                container_photo_signed_url: containerSignedUrl,
+                commodity_photo_signed_url: commoditySignedUrl,
+                ispm_photo_signed_url: ispmSignedUrl,
+              };
+            })
+          );
+
           return {
             ...shipper,
-            containers: containers || [],
+            containers: containersWithSignedUrls,
           };
         })
       );
@@ -272,7 +305,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                         <DialogTitle>Foto No. Container</DialogTitle>
                                       </DialogHeader>
                                       <img
-                                        src={container.container_photo_url || ""}
+                                        src={container.container_photo_signed_url || ""}
                                         alt="Container"
                                         className="w-full h-auto rounded-lg"
                                       />
@@ -292,7 +325,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                         <DialogTitle>Foto Komoditi</DialogTitle>
                                       </DialogHeader>
                                       <img
-                                        src={container.commodity_photo_url || ""}
+                                        src={container.commodity_photo_signed_url || ""}
                                         alt="Commodity"
                                         className="w-full h-auto rounded-lg"
                                       />
@@ -312,7 +345,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                         <DialogTitle>Foto ISPM</DialogTitle>
                                       </DialogHeader>
                                       <img
-                                        src={container.ispm_photo_url}
+                                        src={container.ispm_photo_signed_url || container.ispm_photo_url}
                                         alt="ISPM"
                                         className="w-full h-auto rounded-lg"
                                       />
