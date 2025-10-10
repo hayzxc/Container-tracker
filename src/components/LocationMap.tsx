@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -18,42 +17,65 @@ interface LocationMapProps {
 }
 
 export const LocationMap = ({ latitude, longitude, createdAt }: LocationMapProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<L.Map | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    // Initialize map
+    map.current = L.map(mapContainer.current).setView([latitude, longitude], 13);
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map.current);
+
+    // Add marker
+    const marker = L.marker([latitude, longitude]).addTo(map.current);
+    
+    // Add popup
+    marker.bindPopup(`
+      <div style="font-size: 12px;">
+        <p style="font-weight: 600; margin-bottom: 4px;">Lokasi Container</p>
+        <p>Lat: ${latitude.toFixed(6)}</p>
+        <p>Lng: ${longitude.toFixed(6)}</p>
+        <p style="color: #666; margin-top: 4px;">
+          ${new Date(createdAt).toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </p>
+      </div>
+    `);
+
+    setIsLoaded(true);
+
+    // Cleanup
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [latitude, longitude, createdAt]);
+
   return (
     <div className="space-y-2">
-      <div className="h-[200px] w-full rounded-lg overflow-hidden border">
-        <MapContainer
-          center={[latitude, longitude]}
-          zoom={13}
-          style={{ height: '100%', width: '100%' }}
-          scrollWheelZoom={false}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={[latitude, longitude]}>
-            <Popup>
-              <div className="text-sm">
-                <p className="font-semibold">Lokasi Container</p>
-                <p>Lat: {latitude.toFixed(6)}</p>
-                <p>Lng: {longitude.toFixed(6)}</p>
-                <p className="text-muted-foreground mt-1">
-                  {new Date(createdAt).toLocaleString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        </MapContainer>
-      </div>
-      <div className="text-xs text-muted-foreground">
-        <p>📍 {latitude.toFixed(6)}, {longitude.toFixed(6)}</p>
-      </div>
+      <div 
+        ref={mapContainer} 
+        className="h-[200px] w-full rounded-lg overflow-hidden border"
+        style={{ minHeight: '200px' }}
+      />
+      {isLoaded && (
+        <div className="text-xs text-muted-foreground">
+          <p>📍 {latitude.toFixed(6)}, {longitude.toFixed(6)}</p>
+        </div>
+      )}
     </div>
   );
 };
