@@ -4,11 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, MapPin, Clock, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { LocationMap } from "@/components/LocationMap";
+import { LiveTimestamp } from "@/components/LiveTimestamp";
 
 interface Container {
   id: string;
@@ -353,18 +355,28 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                   </Dialog>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="space-y-1 text-sm">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      {format(new Date(container.created_at), "dd MMM yyyy HH:mm", { locale: id })}
-                                    </div>
-                                    {container.latitude && container.longitude && (
-                                      <div className="flex items-center gap-1 text-muted-foreground">
-                                        <MapPin className="h-3 w-3" />
-                                        {container.latitude.toFixed(4)}, {container.longitude.toFixed(4)}
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <button className="text-left hover:opacity-80 transition-opacity">
+                                        <LiveTimestamp createdAt={container.created_at} />
+                                      </button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl">
+                                      <DialogHeader>
+                                        <DialogTitle>Detail Lokasi & Waktu</DialogTitle>
+                                      </DialogHeader>
+                                      <div className="space-y-4">
+                                        <LiveTimestamp createdAt={container.created_at} />
+                                        {container.latitude && container.longitude && (
+                                          <LocationMap
+                                            latitude={container.latitude}
+                                            longitude={container.longitude}
+                                            createdAt={container.created_at}
+                                          />
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
+                                    </DialogContent>
+                                  </Dialog>
                                 </TableCell>
                                 <TableCell>
                                   {container.verified ? (
