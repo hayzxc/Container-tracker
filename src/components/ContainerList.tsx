@@ -382,17 +382,27 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                          <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
                                        </button>
                                      </DialogTrigger>
-                                     <DialogContent className="max-w-2xl">
+                                     <DialogContent className="max-w-3xl">
                                        <DialogHeader>
-                                         <DialogTitle>Detail Lokasi & Waktu</DialogTitle>
+                                         <DialogTitle>Peta Lokasi</DialogTitle>
                                        </DialogHeader>
                                        <div className="space-y-4">
-                                         <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
+                                         {container.latitude && container.longitude ? (
+                                           <LocationMap
+                                             latitude={container.latitude}
+                                             longitude={container.longitude}
+                                             createdAt={container.custom_timestamp || container.created_at}
+                                           />
+                                         ) : (
+                                           <div className="p-8 text-center text-muted-foreground">
+                                             <p>Tidak ada data lokasi</p>
+                                           </div>
+                                         )}
                                          
                                          <div className="space-y-2 p-4 bg-muted rounded-lg">
                                            <Label className="flex items-center gap-2">
                                              <Edit className="h-4 w-4" />
-                                             Edit Timestamp Custom
+                                             Edit Timestamp
                                            </Label>
                                            <div className="flex gap-2">
                                              <Input
@@ -418,18 +428,10 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                              )}
                                            </div>
                                          </div>
-
-                                         {container.latitude && container.longitude && (
-                                           <LocationMap
-                                             latitude={container.latitude}
-                                             longitude={container.longitude}
-                                             createdAt={container.created_at}
-                                           />
-                                         )}
                                        </div>
                                      </DialogContent>
-                                  </Dialog>
-                                </TableCell>
+                                   </Dialog>
+                                 </TableCell>
                                 <TableCell>
                                   {container.verified ? (
                                     <Badge variant="default" className="gap-1">
