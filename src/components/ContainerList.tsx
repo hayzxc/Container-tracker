@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle, Edit } from "lucide-react";
+import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle, Edit, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -14,6 +14,7 @@ import { LiveTimestamp } from "@/components/LiveTimestamp";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface Container {
   id: string;
@@ -207,6 +208,50 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     }
   };
 
+  const exportToExcel = () => {
+    const exportData: any[] = [];
+    let rowNumber = 1;
+
+    shippers.forEach((shipper) => {
+      shipper.containers.forEach((container) => {
+        const timestamp = container.custom_timestamp || container.created_at;
+        const formattedTime = format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: id });
+        const location = container.latitude && container.longitude 
+          ? `${container.latitude.toFixed(6)}, ${container.longitude.toFixed(6)}`
+          : "-";
+
+        exportData.push({
+          "No": rowNumber++,
+          "shipper": shipper.name,
+          "No container": "Lihat Foto",
+          "Komoditi": "Lihat Foto",
+          "ISPM": "Lihat Foto",
+          "Time/loc": `${formattedTime}\n${location}`
+        });
+      });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 },  // No
+      { wch: 20 }, // shipper
+      { wch: 15 }, // No container
+      { wch: 15 }, // Komoditi
+      { wch: 15 }, // ISPM
+      { wch: 30 }  // Time/loc
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Containers");
+    
+    const fileName = `containers_${format(new Date(), "yyyy-MM-dd_HHmm")}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    
+    toast.success("Data berhasil diexport");
+  };
+
   const toggleShipper = (shipperId: string) => {
     const newExpanded = new Set(expandedShippers);
     if (newExpanded.has(shipperId)) {
@@ -237,10 +282,18 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
   return (
     <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          Daftar Shipper & Container ({shippers.length} shipper, {totalContainers} container)
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Daftar Shipper & Container ({shippers.length} shipper, {totalContainers} container)
+          </CardTitle>
+          {totalContainers > 0 && (
+            <Button onClick={exportToExcel} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export Excel
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {shippers.length === 0 ? (
