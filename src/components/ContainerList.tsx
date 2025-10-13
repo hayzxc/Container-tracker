@@ -209,57 +209,94 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     }
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    const tableData: any[] = [];
-    let rowNumber = 1;
+  const exportToPDF = async () => {
+    try {
+      const doc = new jsPDF();
+      const tableData: any[] = [];
+      let rowNumber = 1;
 
-    shippers.forEach((shipper) => {
-      shipper.containers.forEach((container) => {
-        const timestamp = container.custom_timestamp || container.created_at;
-        const formattedTime = format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: id });
-        const location = container.latitude && container.longitude 
-          ? `${container.latitude.toFixed(6)}, ${container.longitude.toFixed(6)}`
-          : "-";
+      // Prepare data with images
+      for (const shipper of shippers) {
+        for (const container of shipper.containers) {
+          const timestamp = container.custom_timestamp || container.created_at;
+          const formattedTime = format(new Date(timestamp), "dd MMM yyyy HH:mm", { locale: id });
+          const location = container.latitude && container.longitude 
+            ? `${container.latitude.toFixed(6)}, ${container.longitude.toFixed(6)}`
+            : "-";
 
-        tableData.push([
-          rowNumber++,
-          shipper.name,
-          "Lihat Foto",
-          "Lihat Foto",
-          "Lihat Foto",
-          `${formattedTime}\n${location}`
-        ]);
+          tableData.push({
+            no: rowNumber++,
+            shipper: shipper.name,
+            containerPhoto: container.container_photo_signed_url || "",
+            commodityPhoto: container.commodity_photo_signed_url || "",
+            ispmPhoto: container.ispm_photo_signed_url || "",
+            timeLocation: `${formattedTime}\n${location}`
+          });
+        }
+      }
+
+      // Create table with embedded images
+      autoTable(doc, {
+        head: [["No", "Shipper", "No Container", "Komoditi", "ISPM", "Time/loc"]],
+        body: tableData.map(row => [
+          row.no,
+          row.shipper,
+          "",
+          "",
+          "",
+          row.timeLocation
+        ]),
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          minCellHeight: 25,
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          0: { cellWidth: 10 },   // No
+          1: { cellWidth: 25 },   // shipper
+          2: { cellWidth: 30 },   // No container
+          3: { cellWidth: 30 },   // Komoditi
+          4: { cellWidth: 30 },   // ISPM
+          5: { cellWidth: 45 },   // Time/loc
+        },
+        didDrawCell: (data) => {
+          if (data.section === 'body' && data.column.index >= 2 && data.column.index <= 4) {
+            const rowData = tableData[data.row.index];
+            let imageUrl = '';
+            
+            if (data.column.index === 2) imageUrl = rowData.containerPhoto;
+            else if (data.column.index === 3) imageUrl = rowData.commodityPhoto;
+            else if (data.column.index === 4) imageUrl = rowData.ispmPhoto;
+
+            if (imageUrl) {
+              try {
+                const imgWidth = 25;
+                const imgHeight = 20;
+                const x = data.cell.x + (data.cell.width - imgWidth) / 2;
+                const y = data.cell.y + (data.cell.height - imgHeight) / 2;
+                
+                doc.addImage(imageUrl, 'JPEG', x, y, imgWidth, imgHeight);
+              } catch (error) {
+                console.error('Error adding image:', error);
+              }
+            }
+          }
+        },
       });
-    });
 
-    autoTable(doc, {
-      head: [["No", "shipper", "No container", "Komoditi", "ISPM", "Time/loc"]],
-      body: tableData,
-      styles: {
-        fontSize: 8,
-        cellPadding: 3,
-      },
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      columnStyles: {
-        0: { cellWidth: 10 },  // No
-        1: { cellWidth: 35 },  // shipper
-        2: { cellWidth: 30 },  // No container
-        3: { cellWidth: 30 },  // Komoditi
-        4: { cellWidth: 30 },  // ISPM
-        5: { cellWidth: 45 },  // Time/loc
-      },
-    });
-
-    const fileName = `containers_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`;
-    doc.save(fileName);
-    
-    toast.success("Data berhasil diexport ke PDF");
+      const fileName = `containers_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`;
+      doc.save(fileName);
+      
+      toast.success("Data berhasil diexport ke PDF");
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error("Gagal export PDF");
+    }
   };
 
   const toggleShipper = (shipperId: string) => {
