@@ -14,7 +14,8 @@ import { LiveTimestamp } from "@/components/LiveTimestamp";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Container {
   id: string;
@@ -208,8 +209,10 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     }
   };
 
-  const exportToExcel = () => {
-    const exportData: any[] = [];
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    const tableData: any[] = [];
     let rowNumber = 1;
 
     shippers.forEach((shipper) => {
@@ -220,36 +223,43 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
           ? `${container.latitude.toFixed(6)}, ${container.longitude.toFixed(6)}`
           : "-";
 
-        exportData.push({
-          "No": rowNumber++,
-          "shipper": shipper.name,
-          "No container": "Lihat Foto",
-          "Komoditi": "Lihat Foto",
-          "ISPM": "Lihat Foto",
-          "Time/loc": `${formattedTime}\n${location}`
-        });
+        tableData.push([
+          rowNumber++,
+          shipper.name,
+          "Lihat Foto",
+          "Lihat Foto",
+          "Lihat Foto",
+          `${formattedTime}\n${location}`
+        ]);
       });
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    
-    // Set column widths
-    ws['!cols'] = [
-      { wch: 5 },  // No
-      { wch: 20 }, // shipper
-      { wch: 15 }, // No container
-      { wch: 15 }, // Komoditi
-      { wch: 15 }, // ISPM
-      { wch: 30 }  // Time/loc
-    ];
+    autoTable(doc, {
+      head: [["No", "shipper", "No container", "Komoditi", "ISPM", "Time/loc"]],
+      body: tableData,
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 10 },  // No
+        1: { cellWidth: 35 },  // shipper
+        2: { cellWidth: 30 },  // No container
+        3: { cellWidth: 30 },  // Komoditi
+        4: { cellWidth: 30 },  // ISPM
+        5: { cellWidth: 45 },  // Time/loc
+      },
+    });
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Containers");
+    const fileName = `containers_${format(new Date(), "yyyy-MM-dd_HHmm")}.pdf`;
+    doc.save(fileName);
     
-    const fileName = `containers_${format(new Date(), "yyyy-MM-dd_HHmm")}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    
-    toast.success("Data berhasil diexport");
+    toast.success("Data berhasil diexport ke PDF");
   };
 
   const toggleShipper = (shipperId: string) => {
@@ -288,9 +298,9 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
             Daftar Shipper & Container ({shippers.length} shipper, {totalContainers} container)
           </CardTitle>
           {totalContainers > 0 && (
-            <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <Button onClick={exportToPDF} variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              Export Excel
+              Export PDF
             </Button>
           )}
         </div>
