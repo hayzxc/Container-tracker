@@ -416,97 +416,100 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                               <TableRow key={container.id}>
                                 <TableCell className="font-medium">{index + 1}</TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <button className="flex items-center gap-1 text-primary hover:underline">
-                                          <Image className="h-4 w-4" />
-                                          Lihat Foto
-                                        </button>
-                                      </DialogTrigger>
-                                      <DialogContent className="max-w-2xl">
-                                        <DialogHeader>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <button className="flex items-center gap-1 text-primary hover:underline">
+                                        <Image className="h-4 w-4" />
+                                        Lihat Foto
+                                      </button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl">
+                                      <DialogHeader>
+                                        <div className="flex items-center justify-between">
                                           <DialogTitle>Foto No. Container</DialogTitle>
-                                        </DialogHeader>
-                                        <img
-                                          src={container.container_photo_signed_url || ""}
-                                          alt="Container"
-                                          className="w-full h-auto rounded-lg"
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                    {container.container_photo_signed_url && (
-                                      <a
-                                        href={container.container_photo_signed_url}
-                                        download={`container_${container.id}.jpg`}
-                                        className="text-muted-foreground hover:text-primary"
-                                      >
-                                        <Download className="h-4 w-4" />
-                                      </a>
-                                    )}
-                                  </div>
+                                          {container.container_photo_signed_url && (
+                                            <a
+                                              href={container.container_photo_signed_url}
+                                              download={`container_${container.id}.jpg`}
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                            >
+                                              <Download className="h-4 w-4" />
+                                              Download
+                                            </a>
+                                          )}
+                                        </div>
+                                      </DialogHeader>
+                                      <img
+                                        src={container.container_photo_signed_url || ""}
+                                        alt="Container"
+                                        className="w-full h-auto rounded-lg"
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <button className="flex items-center gap-1 text-primary hover:underline">
-                                          <Image className="h-4 w-4" />
-                                          Lihat Foto
-                                        </button>
-                                      </DialogTrigger>
-                                      <DialogContent className="max-w-2xl">
-                                        <DialogHeader>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <button className="flex items-center gap-1 text-primary hover:underline">
+                                        <Image className="h-4 w-4" />
+                                        Lihat Foto
+                                      </button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl">
+                                      <DialogHeader>
+                                        <div className="flex items-center justify-between">
                                           <DialogTitle>Foto Komoditi</DialogTitle>
-                                        </DialogHeader>
-                                        <img
-                                          src={container.commodity_photo_signed_url || ""}
-                                          alt="Commodity"
-                                          className="w-full h-auto rounded-lg"
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                    {container.commodity_photo_signed_url && (
-                                      <a
-                                        href={container.commodity_photo_signed_url}
-                                        download={`commodity_${container.id}.jpg`}
-                                        className="text-muted-foreground hover:text-primary"
-                                      >
-                                        <Download className="h-4 w-4" />
-                                      </a>
-                                    )}
-                                  </div>
+                                          {container.commodity_photo_signed_url && (
+                                            <a
+                                              href={container.commodity_photo_signed_url}
+                                              download={`commodity_${container.id}.jpg`}
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                            >
+                                              <Download className="h-4 w-4" />
+                                              Download
+                                            </a>
+                                          )}
+                                        </div>
+                                      </DialogHeader>
+                                      <img
+                                        src={container.commodity_photo_signed_url || ""}
+                                        alt="Commodity"
+                                        className="w-full h-auto rounded-lg"
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <button className="flex items-center gap-1 text-primary hover:underline">
-                                          <Image className="h-4 w-4" />
-                                          Lihat Foto
-                                        </button>
-                                      </DialogTrigger>
-                                      <DialogContent className="max-w-2xl">
-                                        <DialogHeader>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <button className="flex items-center gap-1 text-primary hover:underline">
+                                        <Image className="h-4 w-4" />
+                                        Lihat Foto
+                                      </button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl">
+                                      <DialogHeader>
+                                        <div className="flex items-center justify-between">
                                           <DialogTitle>Foto ISPM</DialogTitle>
-                                        </DialogHeader>
-                                        <img
-                                          src={container.ispm_photo_signed_url || container.ispm_photo_url}
-                                          alt="ISPM"
-                                          className="w-full h-auto rounded-lg"
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                    {container.ispm_photo_signed_url && (
-                                      <a
-                                        href={container.ispm_photo_signed_url}
-                                        download={`ispm_${container.id}.jpg`}
-                                        className="text-muted-foreground hover:text-primary"
-                                      >
-                                        <Download className="h-4 w-4" />
-                                      </a>
-                                    )}
-                                  </div>
+                                          {container.ispm_photo_signed_url && (
+                                            <a
+                                              href={container.ispm_photo_signed_url}
+                                              download={`ispm_${container.id}.jpg`}
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                            >
+                                              <Download className="h-4 w-4" />
+                                              Download
+                                            </a>
+                                          )}
+                                        </div>
+                                      </DialogHeader>
+                                      <img
+                                        src={container.ispm_photo_signed_url || container.ispm_photo_url}
+                                        alt="ISPM"
+                                        className="w-full h-auto rounded-lg"
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
                                 </TableCell>
                                  <TableCell>
                                    <Dialog>
