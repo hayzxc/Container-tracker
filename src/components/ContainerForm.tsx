@@ -19,6 +19,9 @@ interface Container {
   containerPhoto: string | null;
   commodityPhoto: string | null;
   ispmPhoto: string | null;
+  stackingPhoto: string | null;
+  moisturePhoto: string | null;
+  commodityType: string;
   location: { lat: number; lng: number } | null;
   customTimestamp: string | null;
 }
@@ -57,6 +60,9 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
         containerPhoto: null,
         commodityPhoto: null,
         ispmPhoto: null,
+        stackingPhoto: null,
+        moisturePhoto: null,
+        commodityType: "",
         location: {
           lat: position.coords.latitude,
           lng: position.coords.longitude
@@ -75,7 +81,7 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
     setContainers(containers.filter((_, i) => i !== index));
   };
 
-  const takePhoto = async (containerIndex: number, type: 'containerPhoto' | 'commodityPhoto' | 'ispmPhoto') => {
+  const takePhoto = async (containerIndex: number, type: 'containerPhoto' | 'commodityPhoto' | 'ispmPhoto' | 'stackingPhoto' | 'moisturePhoto') => {
     try {
       const image = await CapCamera.getPhoto({
         quality: 80,
@@ -147,12 +153,13 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
       return;
     }
 
-    // Check if all containers have all photos
+    // Check if all containers have all required photos
     const incompleteContainer = containers.findIndex(
-      c => !c.containerPhoto || !c.commodityPhoto || !c.ispmPhoto
+      c => !c.containerPhoto || !c.commodityPhoto || !c.ispmPhoto || !c.commodityType ||
+           (c.commodityType === 'kayu' && (!c.stackingPhoto || !c.moisturePhoto))
     );
     if (incompleteContainer !== -1) {
-      toast.error(`Container ${incompleteContainer + 1} belum lengkap foto-fotonya!`);
+      toast.error(`Container ${incompleteContainer + 1} belum lengkap!`);
       return;
     }
 
@@ -171,12 +178,22 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
         const commodityPhotoUrl = await uploadPhoto(container.commodityPhoto!, user.id, `${user.id}/commodity_${timestamp}_${i}.jpg`);
         const ispmPhotoUrl = await uploadPhoto(container.ispmPhoto!, user.id, `${user.id}/ispm_${timestamp}_${i}.jpg`);
 
+        let stackingPhotoUrl = null;
+        let moisturePhotoUrl = null;
+        if (container.commodityType === 'kayu') {
+          stackingPhotoUrl = await uploadPhoto(container.stackingPhoto!, user.id, `${user.id}/stacking_${timestamp}_${i}.jpg`);
+          moisturePhotoUrl = await uploadPhoto(container.moisturePhoto!, user.id, `${user.id}/moisture_${timestamp}_${i}.jpg`);
+        }
+
         const { error } = await supabase.from("containers").insert({
           user_id: user.id,
           shipper_id: selectedShipper,
           container_photo_url: containerPhotoUrl,
           commodity_photo_url: commodityPhotoUrl,
           ispm_photo_url: ispmPhotoUrl,
+          commodity_type: container.commodityType,
+          stacking_photo_url: stackingPhotoUrl,
+          moisture_photo_url: moisturePhotoUrl,
           latitude: container.location?.lat || null,
           longitude: container.location?.lng || null,
           custom_timestamp: container.customTimestamp ? new Date(container.customTimestamp).toISOString() : null,
@@ -267,6 +284,29 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
                     </Button>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label>Pilih Komoditi</Label>
+                    <Select
+                      value={container.commodityType}
+                      onValueChange={(value) => {
+                        const updatedContainers = [...containers];
+                        updatedContainers[index].commodityType = value;
+                        setContainers(updatedContainers);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih komoditi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kayu">Kayu</SelectItem>
+                        <SelectItem value="batu_bara">Batu Bara</SelectItem>
+                        <SelectItem value="kelapa_sawit">Kelapa Sawit</SelectItem>
+                        <SelectItem value="karet">Karet</SelectItem>
+                        <SelectItem value="lainnya">Lainnya</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Foto No. Container</Label>
@@ -316,6 +356,42 @@ export const ContainerForm = ({ onSuccess }: ContainerFormProps) => {
                       )}
                     </div>
                   </div>
+
+                  {container.commodityType === 'kayu' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-muted/50 rounded-md">
+                      <div className="space-y-2">
+                        <Label>Foto Stacking</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => takePhoto(index, 'stackingPhoto')}
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          {container.stackingPhoto ? "Ganti" : "Ambil Foto"}
+                        </Button>
+                        {container.stackingPhoto && (
+                          <img src={`data:image/jpeg;base64,${container.stackingPhoto}`} alt="Stacking" className="w-full h-32 object-cover rounded-md" />
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Foto Kadar Air</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => takePhoto(index, 'moisturePhoto')}
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          {container.moisturePhoto ? "Ganti" : "Ambil Foto"}
+                        </Button>
+                        {container.moisturePhoto && (
+                          <img src={`data:image/jpeg;base64,${container.moisturePhoto}`} alt="Kadar Air" className="w-full h-32 object-cover rounded-md" />
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {container.location && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md">
