@@ -22,9 +22,6 @@ interface Container {
   container_photo_url: string | null;
   commodity_photo_url: string | null;
   ispm_photo_url: string;
-  commodity_type: string | null;
-  stacking_photo_url: string | null;
-  moisture_photo_url: string | null;
   latitude: number | null;
   longitude: number | null;
   created_at: string;
@@ -35,8 +32,6 @@ interface Container {
   container_photo_signed_url?: string;
   commodity_photo_signed_url?: string;
   ispm_photo_signed_url?: string;
-  stacking_photo_signed_url?: string;
-  moisture_photo_signed_url?: string;
 }
 
 interface ShipperWithContainers {
@@ -105,12 +100,10 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                 return data?.signedUrl || url;
               };
 
-              const [containerSignedUrl, commoditySignedUrl, ispmSignedUrl, stackingSignedUrl, moistureSignedUrl] = await Promise.all([
+              const [containerSignedUrl, commoditySignedUrl, ispmSignedUrl] = await Promise.all([
                 getSignedUrl(container.container_photo_url),
                 getSignedUrl(container.commodity_photo_url),
                 getSignedUrl(container.ispm_photo_url),
-                getSignedUrl(container.stacking_photo_url),
-                getSignedUrl(container.moisture_photo_url),
               ]);
 
               return {
@@ -118,8 +111,6 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                 container_photo_signed_url: containerSignedUrl,
                 commodity_photo_signed_url: commoditySignedUrl,
                 ispm_photo_signed_url: ispmSignedUrl,
-                stacking_photo_signed_url: stackingSignedUrl,
-                moisture_photo_signed_url: moistureSignedUrl,
               };
             })
           );
@@ -413,7 +404,6 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                           <TableHeader>
                             <TableRow>
                               <TableHead className="w-12">No</TableHead>
-                              <TableHead>Tipe</TableHead>
                               <TableHead>No. Container</TableHead>
                               <TableHead>Komoditi</TableHead>
                               <TableHead>ISPM</TableHead>
@@ -426,11 +416,6 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                             {shipper.containers.map((container, index) => (
                               <TableRow key={container.id}>
                                 <TableCell className="font-medium">{index + 1}</TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {container.commodity_type || "-"}
-                                  </Badge>
-                                </TableCell>
                                 <TableCell>
                                   <Dialog>
                                     <DialogTrigger asChild>
@@ -487,60 +472,11 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                           )}
                                         </div>
                                       </DialogHeader>
-                                      <div className="space-y-4">
-                                        <div>
-                                          <h3 className="text-sm font-medium mb-2">Foto Komoditi Utama</h3>
-                                          <img
-                                            src={container.commodity_photo_signed_url || ""}
-                                            alt="Commodity"
-                                            className="w-full h-auto rounded-lg"
-                                          />
-                                        </div>
-                                        {container.commodity_type === 'kayu' && (
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {container.stacking_photo_signed_url && (
-                                              <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                  <h3 className="text-sm font-medium">Foto Stacking</h3>
-                                                  <a
-                                                    href={container.stacking_photo_signed_url}
-                                                    download={`stacking_${container.id}.jpg`}
-                                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                                  >
-                                                    <Download className="h-3 w-3" />
-                                                    Download
-                                                  </a>
-                                                </div>
-                                                <img
-                                                  src={container.stacking_photo_signed_url}
-                                                  alt="Stacking"
-                                                  className="w-full h-auto rounded-lg"
-                                                />
-                                              </div>
-                                            )}
-                                            {container.moisture_photo_signed_url && (
-                                              <div>
-                                                <div className="flex items-center justify-between mb-2">
-                                                  <h3 className="text-sm font-medium">Foto Kadar Air</h3>
-                                                  <a
-                                                    href={container.moisture_photo_signed_url}
-                                                    download={`moisture_${container.id}.jpg`}
-                                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                                  >
-                                                    <Download className="h-3 w-3" />
-                                                    Download
-                                                  </a>
-                                                </div>
-                                                <img
-                                                  src={container.moisture_photo_signed_url}
-                                                  alt="Kadar Air"
-                                                  className="w-full h-auto rounded-lg"
-                                                />
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
+                                      <img
+                                        src={container.commodity_photo_signed_url || ""}
+                                        alt="Commodity"
+                                        className="w-full h-auto rounded-lg"
+                                      />
                                     </DialogContent>
                                   </Dialog>
                                 </TableCell>
