@@ -404,10 +404,8 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                           <TableHeader>
                             <TableRow>
                               <TableHead className="w-12">No</TableHead>
-                              <TableHead>No. Container</TableHead>
-                              <TableHead>Komoditi</TableHead>
-                              <TableHead>ISPM</TableHead>
-                              <TableHead>Time/Loc</TableHead>
+                              <TableHead>Foto ISPM</TableHead>
+                              <TableHead className="w-[400px]">Lokasi</TableHead>
                               <TableHead>Status</TableHead>
                               {isAdmin && <TableHead className="w-24">Aksi</TableHead>}
                             </TableRow>
@@ -415,161 +413,169 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                           <TableBody>
                             {shipper.containers.map((container, index) => (
                               <TableRow key={container.id}>
-                                <TableCell className="font-medium">{index + 1}</TableCell>
-                                <TableCell>
+                                <TableCell className="font-medium align-top">{index + 1}</TableCell>
+                                <TableCell className="align-top">
                                   <Dialog>
                                     <DialogTrigger asChild>
-                                      <button className="flex items-center gap-1 text-primary hover:underline">
-                                        <Image className="h-4 w-4" />
-                                        Lihat Foto
-                                      </button>
+                                      <div className="cursor-pointer group">
+                                        <img
+                                          src={container.ispm_photo_signed_url || container.ispm_photo_url}
+                                          alt="ISPM"
+                                          className="w-20 h-20 object-cover rounded border hover:opacity-80 transition-opacity"
+                                        />
+                                      </div>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                                       <DialogHeader>
                                         <div className="flex items-center justify-between">
-                                          <DialogTitle>Foto No. Container</DialogTitle>
+                                          <DialogTitle>Detail Container</DialogTitle>
+                                        </div>
+                                      </DialogHeader>
+                                      <div className="space-y-4">
+                                        <div>
+                                          <h3 className="font-semibold mb-2">Foto No. Container</h3>
+                                          <img
+                                            src={container.container_photo_signed_url || ""}
+                                            alt="Container"
+                                            className="w-full h-auto rounded-lg border"
+                                          />
                                           {container.container_photo_signed_url && (
                                             <a
                                               href={container.container_photo_signed_url}
                                               download={`container_${container.id}.jpg`}
-                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
                                             >
                                               <Download className="h-4 w-4" />
                                               Download
                                             </a>
                                           )}
                                         </div>
-                                      </DialogHeader>
-                                      <img
-                                        src={container.container_photo_signed_url || ""}
-                                        alt="Container"
-                                        className="w-full h-auto rounded-lg"
-                                      />
-                                    </DialogContent>
-                                  </Dialog>
-                                </TableCell>
-                                <TableCell>
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <button className="flex items-center gap-1 text-primary hover:underline">
-                                        <Image className="h-4 w-4" />
-                                        Lihat Foto
-                                      </button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                      <DialogHeader>
-                                        <div className="flex items-center justify-between">
-                                          <DialogTitle>Foto Komoditi</DialogTitle>
+                                        <div>
+                                          <h3 className="font-semibold mb-2">Foto Komoditi</h3>
+                                          <img
+                                            src={container.commodity_photo_signed_url || ""}
+                                            alt="Commodity"
+                                            className="w-full h-auto rounded-lg border"
+                                          />
                                           {container.commodity_photo_signed_url && (
                                             <a
                                               href={container.commodity_photo_signed_url}
                                               download={`commodity_${container.id}.jpg`}
-                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
                                             >
                                               <Download className="h-4 w-4" />
                                               Download
                                             </a>
                                           )}
                                         </div>
-                                      </DialogHeader>
-                                      <img
-                                        src={container.commodity_photo_signed_url || ""}
-                                        alt="Commodity"
-                                        className="w-full h-auto rounded-lg"
-                                      />
-                                    </DialogContent>
-                                  </Dialog>
-                                </TableCell>
-                                <TableCell>
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <button className="flex items-center gap-1 text-primary hover:underline">
-                                        <Image className="h-4 w-4" />
-                                        Lihat Foto
-                                      </button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-2xl">
-                                      <DialogHeader>
-                                        <div className="flex items-center justify-between">
-                                          <DialogTitle>Foto ISPM</DialogTitle>
+                                        <div>
+                                          <h3 className="font-semibold mb-2">Foto ISPM</h3>
+                                          <img
+                                            src={container.ispm_photo_signed_url || container.ispm_photo_url}
+                                            alt="ISPM"
+                                            className="w-full h-auto rounded-lg border"
+                                          />
                                           {container.ispm_photo_signed_url && (
                                             <a
                                               href={container.ispm_photo_signed_url}
                                               download={`ispm_${container.id}.jpg`}
-                                              className="flex items-center gap-2 text-sm text-primary hover:underline"
+                                              className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
                                             >
                                               <Download className="h-4 w-4" />
                                               Download
                                             </a>
                                           )}
                                         </div>
-                                      </DialogHeader>
-                                      <img
-                                        src={container.ispm_photo_signed_url || container.ispm_photo_url}
-                                        alt="ISPM"
-                                        className="w-full h-auto rounded-lg"
-                                      />
+                                      </div>
                                     </DialogContent>
                                   </Dialog>
                                 </TableCell>
-                                 <TableCell>
-                                   <Dialog>
-                                     <DialogTrigger asChild>
-                                       <button className="text-left hover:opacity-80 transition-opacity">
-                                         <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
-                                       </button>
-                                     </DialogTrigger>
-                                     <DialogContent className="max-w-3xl">
-                                       <DialogHeader>
-                                         <DialogTitle>Peta Lokasi</DialogTitle>
-                                       </DialogHeader>
-                                       <div className="space-y-4">
-                                         {container.latitude && container.longitude ? (
-                                           <LocationMap
-                                             latitude={container.latitude}
-                                             longitude={container.longitude}
-                                             createdAt={container.custom_timestamp || container.created_at}
-                                           />
-                                         ) : (
-                                           <div className="p-8 text-center text-muted-foreground">
-                                             <p>Tidak ada data lokasi</p>
-                                           </div>
-                                         )}
-                                         
-                                         <div className="space-y-2 p-4 bg-muted rounded-lg">
-                                           <Label className="flex items-center gap-2">
-                                             <Edit className="h-4 w-4" />
-                                             Edit Timestamp
-                                           </Label>
-                                           <div className="flex gap-2">
-                                             <Input
-                                               type="datetime-local"
-                                               defaultValue={
-                                                 container.custom_timestamp 
-                                                   ? new Date(container.custom_timestamp).toISOString().slice(0, 16)
-                                                   : new Date(container.created_at).toISOString().slice(0, 16)
-                                               }
-                                               onChange={(e) => {
-                                                 if (e.target.value) {
-                                                   updateTimestamp(container.id, e.target.value);
-                                                 }
-                                               }}
-                                             />
-                                             {container.custom_timestamp && (
-                                               <Button
-                                                 variant="outline"
-                                                 onClick={() => updateTimestamp(container.id, "")}
-                                               >
-                                                 Reset
-                                               </Button>
-                                             )}
-                                           </div>
-                                         </div>
-                                       </div>
-                                     </DialogContent>
-                                   </Dialog>
-                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="align-top">
+                                  <div className="flex gap-3">
+                                    {/* Map on the left */}
+                                    <div className="flex-shrink-0">
+                                      {container.latitude && container.longitude ? (
+                                        <Dialog>
+                                          <DialogTrigger asChild>
+                                            <div className="cursor-pointer">
+                                              <div 
+                                                className="w-20 h-20 rounded border overflow-hidden bg-muted hover:opacity-80 transition-opacity"
+                                                style={{
+                                                  backgroundImage: `url(https://staticmap.openstreetmap.de/staticmap.php?center=${container.latitude},${container.longitude}&zoom=13&size=160x160&maptype=mapnik&markers=${container.latitude},${container.longitude},red-pushpin)`,
+                                                  backgroundSize: 'cover',
+                                                  backgroundPosition: 'center'
+                                                }}
+                                              />
+                                            </div>
+                                          </DialogTrigger>
+                                          <DialogContent className="max-w-3xl">
+                                            <DialogHeader>
+                                              <DialogTitle>Peta Lokasi</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4">
+                                              <LocationMap
+                                                latitude={container.latitude}
+                                                longitude={container.longitude}
+                                                createdAt={container.custom_timestamp || container.created_at}
+                                              />
+                                              
+                                              <div className="space-y-2 p-4 bg-muted rounded-lg">
+                                                <Label className="flex items-center gap-2">
+                                                  <Edit className="h-4 w-4" />
+                                                  Edit Timestamp
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                  <Input
+                                                    type="datetime-local"
+                                                    defaultValue={
+                                                      container.custom_timestamp 
+                                                        ? new Date(container.custom_timestamp).toISOString().slice(0, 16)
+                                                        : new Date(container.created_at).toISOString().slice(0, 16)
+                                                    }
+                                                    onChange={(e) => {
+                                                      if (e.target.value) {
+                                                        updateTimestamp(container.id, e.target.value);
+                                                      }
+                                                    }}
+                                                  />
+                                                  {container.custom_timestamp && (
+                                                    <Button
+                                                      variant="outline"
+                                                      onClick={() => updateTimestamp(container.id, "")}
+                                                    >
+                                                      Reset
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </DialogContent>
+                                        </Dialog>
+                                      ) : (
+                                        <div className="w-20 h-20 rounded border bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                                          No map
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Info on the right */}
+                                    <div className="flex-1 text-sm space-y-1">
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-muted-foreground min-w-16">Lat:</span>
+                                        <span className="font-mono text-xs">{container.latitude?.toFixed(6) || '-'}</span>
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-muted-foreground min-w-16">Lng:</span>
+                                        <span className="font-mono text-xs">{container.longitude?.toFixed(6) || '-'}</span>
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-muted-foreground min-w-16">Waktu:</span>
+                                        <LiveTimestamp createdAt={container.created_at} customTimestamp={container.custom_timestamp} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="align-top">
                                   {container.verified ? (
                                     <Badge variant="default" className="gap-1">
                                       <CheckCircle className="h-3 w-3" />
@@ -583,7 +589,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
                                   )}
                                 </TableCell>
                                 {isAdmin && (
-                                  <TableCell>
+                                  <TableCell className="align-top">
                                     <div className="flex gap-2">
                                       {!container.verified && (
                                         <Button
