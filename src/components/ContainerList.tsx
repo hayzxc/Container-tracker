@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle, Edit, Download } from "lucide-react";
+import { Package, Image, ChevronDown, ChevronRight, Trash2, CheckCircle, XCircle, Edit, Download, Search, Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Container {
   id: string;
@@ -51,6 +52,13 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
   const [loading, setLoading] = useState(true);
   const [expandedShippers, setExpandedShippers] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [verificationFilter, setVerificationFilter] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const checkAdminRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -310,6 +318,47 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
     setExpandedShippers(newExpanded);
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setDateFrom("");
+    setDateTo("");
+    setVerificationFilter("all");
+  };
+
+  const hasActiveFilters = searchQuery || dateFrom || dateTo || verificationFilter !== "all";
+
+  // Filter shippers and containers based on search and filter criteria
+  const filteredShippers = shippers.map(shipper => {
+    // Filter containers within this shipper
+    const filteredContainers = shipper.containers.filter(container => {
+      // Date filter
+      if (dateFrom || dateTo) {
+        const containerDate = new Date(container.custom_timestamp || container.created_at);
+        if (dateFrom && containerDate < new Date(dateFrom)) return false;
+        if (dateTo && containerDate > new Date(dateTo + "T23:59:59")) return false;
+      }
+
+      // Verification filter
+      if (verificationFilter === "verified" && !container.verified) return false;
+      if (verificationFilter === "unverified" && container.verified) return false;
+
+      return true;
+    });
+
+    return {
+      ...shipper,
+      containers: filteredContainers
+    };
+  }).filter(shipper => {
+    // Filter by shipper name
+    if (searchQuery && !shipper.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    
+    // Only show shippers that have containers after filtering
+    return shipper.containers.length > 0;
+  });
+
   useEffect(() => {
     checkAdminRole();
     fetchEntries();
@@ -326,22 +375,107 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
   }
 
   const totalContainers = shippers.reduce((sum, s) => sum + s.containers.length, 0);
+  const filteredTotalContainers = filteredShippers.reduce((sum, s) => sum + s.containers.length, 0);
 
   return (
     <Card className="shadow-[var(--shadow-card)]">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Daftar Shipper & Container ({shippers.length} shipper, {totalContainers} container)
+            Daftar Shipper & Container ({filteredShippers.length}/{shippers.length} shipper, {filteredTotalContainers}/{totalContainers} container)
           </CardTitle>
-          {totalContainers > 0 && (
-            <Button onClick={exportToPDF} variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Export PDF
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowFilters(!showFilters)} 
+              variant="outline" 
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              Filter {hasActiveFilters && <Badge variant="default" className="ml-1 h-5 w-5 p-0 flex items-center justify-center">{[searchQuery, dateFrom, dateTo, verificationFilter !== "all"].filter(Boolean).length}</Badge>}
             </Button>
-          )}
+            {totalContainers > 0 && (
+              <Button onClick={exportToPDF} variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filter & Pencarian
+              </h3>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="gap-2 text-muted-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  Reset
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search by Shipper Name */}
+              <div className="space-y-2">
+                <Label className="text-sm">Cari Nama Shipper</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Ketik nama shipper..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+
+              {/* Date From */}
+              <div className="space-y-2">
+                <Label className="text-sm">Tanggal Mulai</Label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="space-y-2">
+                <Label className="text-sm">Tanggal Akhir</Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+              </div>
+
+              {/* Verification Status */}
+              <div className="space-y-2">
+                <Label className="text-sm">Status Verifikasi</Label>
+                <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="verified">Terverifikasi</SelectItem>
+                    <SelectItem value="unverified">Belum Diverifikasi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {shippers.length === 0 ? (
@@ -349,9 +483,21 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
             <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>Belum ada data shipper</p>
           </div>
+        ) : filteredShippers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>Tidak ada data yang sesuai dengan filter</p>
+            <Button
+              variant="link"
+              onClick={clearFilters}
+              className="mt-2"
+            >
+              Reset Filter
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
-            {shippers.map((shipper) => (
+            {filteredShippers.map((shipper) => (
               <Collapsible
                 key={shipper.id}
                 open={expandedShippers.has(shipper.id)}
