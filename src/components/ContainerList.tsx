@@ -223,7 +223,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
       const tableData: any[] = [];
 
       // Prepare data with images
-      for (const shipper of shippers) {
+      for (const shipper of filteredShippers) {
         for (const container of shipper.containers) {
           // Generate static map URL for the location
           let mapUrl = '';
@@ -394,7 +394,7 @@ export const ContainerList = ({ refresh }: ContainerListProps) => {
               <Filter className="h-4 w-4" />
               Filter {hasActiveFilters && <Badge variant="default" className="ml-1 h-5 w-5 p-0 flex items-center justify-center">{[searchQuery, dateFrom, dateTo, verificationFilter !== "all"].filter(Boolean).length}</Badge>}
             </Button>
-            {totalContainers > 0 && (
+            {isAdmin && filteredTotalContainers > 0 && (
               <Button onClick={exportToPDF} variant="outline" className="gap-2">
                 <Download className="h-4 w-4" />
                 Export PDF
